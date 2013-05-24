@@ -76,6 +76,32 @@ public class UnitOfWork<R extends IIdentifiable> {
 	public boolean isUpdatingExistingState() {
 		return this.updateNum > 0 || this.removeNum > 0;
 	}
+	
+	/**
+	 * Returns the number of records to insert.
+	 * 
+	 * @return 
+	 */
+	public int getInsertNum() {
+		return this.insertNum;
+	}
+	
+	/**
+	 * Returns the number of records to update.
+	 * @return 
+	 */
+	public int getUpdateNum() {
+		return this.updateNum;
+	}
+	
+	/**
+	 * Returns the number of records to remove.
+	 * 
+	 * @return 
+	 */
+	public int getRemoveNum() {
+		return this.removeNum;
+	}
 
 	/**
 	 * Specifies a new record to insert. The method can be called several times
@@ -122,16 +148,18 @@ public class UnitOfWork<R extends IIdentifiable> {
 			switch(this.recordStatuses.get(record)) {
 				case NEW:
 					this.insertNum--;
-					this.removeNum++;
-					this.recordStatuses.put(record, RecordStatus.REMOVED);
+					this.changedRecords.remove(record);
+					break;
 				case MODIFIED:
 					this.updateNum--;
 					this.removeNum++;
 					this.recordStatuses.put(record, RecordStatus.REMOVED);
+					break;
 				case REMOVED:
 			}
-		} else {
+		} else if(record.getId() != IIdentifiable.NEUTRAL_ID){
 			this.changedRecords.add(record);
+			this.recordStatuses.put(record, RecordStatus.REMOVED);
 			this.removeNum++;
 		}
 	}

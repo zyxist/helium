@@ -72,6 +72,76 @@ public class UnitOfWorkTest {
 			Assert.assertEquals("The record 'Foo' is already in the data model and cannot be inserted again.", exception.getMessage());
 		}
 	}
+	
+	@Test
+	public void testRemovingUnisertedItemIgnoresUnpersistedEntites() {
+		UnitOfWork<UnitItem> unit = new UnitOfWork<>();
+		UnitItem item = new UnitItem();
+		item.setValue("Foo");
+		item.setId(IIdentifiable.NEUTRAL_ID);
+		
+		unit.remove(item);
+		Assert.assertEquals(0, unit.getRemovedRecords().size());
+		Assert.assertTrue(unit.isEmpty());
+	}
+	
+	@Test
+	public void testRemovingUnisertedItemsWorks() {
+		UnitOfWork<UnitItem> unit = new UnitOfWork<>();
+		UnitItem item = new UnitItem();
+		item.setValue("Foo");
+		item.setId(345);
+		
+		Assert.assertTrue(unit.isEmpty());
+		unit.remove(item);
+		Assert.assertEquals(1, unit.getRemovedRecords().size());
+		Assert.assertFalse(unit.isEmpty());
+	}
+	
+	@Test
+	public void testRemovingNewItems() {
+		UnitOfWork<UnitItem> unit = new UnitOfWork<>();
+		UnitItem item = new UnitItem();
+		item.setValue("Foo");
+		item.setId(IIdentifiable.NEUTRAL_ID);
+		
+		unit.insert(item);
+		Assert.assertTrue(unit.getInsertedRecords().contains(item));
+		Assert.assertEquals(1, unit.getInsertNum());
+		Assert.assertEquals(0, unit.getUpdateNum());
+		Assert.assertEquals(0, unit.getRemoveNum());
+		unit.remove(item);
+		Assert.assertFalse(unit.getInsertedRecords().contains(item));
+		Assert.assertFalse(unit.getRemovedRecords().contains(item));
+		Assert.assertEquals(0, unit.getInsertNum());
+		Assert.assertEquals(0, unit.getUpdateNum());
+		Assert.assertEquals(0, unit.getRemoveNum());
+	}
+	
+	@Test
+	public void testRemovingUpdatedItems() {
+		UnitOfWork<UnitItem> unit = new UnitOfWork<>();
+		UnitItem item = new UnitItem();
+		item.setValue("Foo");
+		item.setId(345);
+		
+		unit.update(item);
+		Assert.assertTrue(unit.getUpdatedRecords().contains(item));
+		Assert.assertEquals(0, unit.getInsertNum());
+		Assert.assertEquals(1, unit.getUpdateNum());
+		Assert.assertEquals(0, unit.getRemoveNum());
+		unit.remove(item);
+		Assert.assertFalse(unit.getUpdatedRecords().contains(item));
+		Assert.assertTrue(unit.getRemovedRecords().contains(item));
+		Assert.assertEquals(0, unit.getInsertNum());
+		Assert.assertEquals(0, unit.getUpdateNum());
+		Assert.assertEquals(1, unit.getRemoveNum());
+	}
+	
+	@Test
+	public void testRemovingModifiedItems() {
+		
+	}
 }
 
 class UnitItem implements IIdentifiable {
